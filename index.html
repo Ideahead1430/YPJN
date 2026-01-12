@@ -426,7 +426,7 @@ footer { background: linear-gradient(135deg, var(--primary-color), var(--seconda
     // ===============================================================
     const SHEET_ID = '17GVmQP5WS6cw_0qYX6Ax7jYCgVsYdhFmC9mE5ORE9MM';
     const API_KEY = 'AIzaSyAnh4_USAic_e2zA50PHKbiLC3JLbuVIYg';
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxPcaf81q5TkAuV6jQddIvq4MPzmu0t3YUOA7hrZs7PdBhsq82oUJqCm9WOzHutcWr1sg/exec'; // << TAMBAHKAN URL WEB APP ANDA DI SINI
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyb2FDSKwy-ta-iNWk_yuA5bS0quelPvquOCVCIB2ezNZ110eSI2NmyKHXtyzhQeV_1lw/exec'; // << TAMBAHKAN URL WEB APP ANDA DI SINI
     
     const USE_LIVE_API = true; 
     // ===============================================================
@@ -556,40 +556,40 @@ async function loadUsers() {
         console.log("✅ Data contoh selesai dimuatkan.");
     }
     
-    // --- SAVE FUNCTIONS (BARU!) ---
-    async function saveToSheet(sheetName, rowData) {
-        console.log(`Menyimpan data ke ${sheetName}...`, rowData);
-        try {
-            const response = await fetch(WEB_APP_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    sheetName: sheetName,
-                    rowData: rowData
-                })
-            });
+    // Ganti fungsi saveToSheet dengan versi GET ini
+async function saveToSheet(sheetName, rowData) {
+    console.log(`Menyimpan data ke ${sheetName}...`, rowData);
+    try {
+        // Tukar array kepada string JSON untuk dihantar sebagai parameter
+        const rowDataString = JSON.stringify(rowData);
+        
+        // Bina URL dengan parameter query
+        const url = `${WEB_APP_URL}?sheetName=${encodeURIComponent(sheetName)}&rowData=${encodeURIComponent(rowDataString)}`;
+        
+        console.log("Menghantar request ke URL:", url);
 
-            const result = await response.json();
-            console.log("Respons dari Web App:", result);
+        const response = await fetch(url, {
+            method: 'GET', // Kita menggunakan GET sekarang
+        });
 
-            if (result.status === 'success') {
-                showNotification('Data berjaya disimpan!', 'success');
-                // Muat semula data untuk paparan terkini
-                if (sheetName === 'Pengumuman') {
-                    loadAnnouncements();
-                } else if (sheetName === 'Berita') {
-                    loadNews();
-                }
-            } else {
-                throw new Error(result.message);
+        const result = await response.json();
+        console.log("Respons dari Web App:", result);
+
+        if (result.status === 'success') {
+            showNotification('Data berjaya disimpan!', 'success');
+            if (sheetName === 'Pengumuman') {
+                loadAnnouncements();
+            } else if (sheetName === 'Berita') {
+                loadNews();
             }
-        } catch (error) {
-            console.error("❌ Ralat menyimpan data:", error);
-            showNotification(`Gagal menyimpan data: ${error.message}`, 'error');
+        } else {
+            throw new Error(result.message);
         }
+    } catch (error) {
+        console.error("❌ Ralat menyimpan data:", error);
+        showNotification(`Gagal menyimpan data: ${error.message}`, 'error');
     }
+}
 
     // --- UI UPDATES & HANDLERS ---
     function checkLoginStatus() { const user = localStorage.getItem('ypjnUser'); if (user) { currentUser = JSON.parse(user); updateUIForLoggedInUser(); } }
